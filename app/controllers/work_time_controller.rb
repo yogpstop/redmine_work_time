@@ -764,9 +764,9 @@ private
         next if issue.nil? || !issue.visible?
         next if !User.current.allowed_to?(:log_time, issue.project)
         valss.each do |count, vals|
-          tm_vals = vals.slice! "remaining_hours", "status_id"
+          tm_vals = vals.slice! "remaining_hours", "status_id", "done_ratio"
           tm_vals.merge!(params["new_time_entry_#{issue_id}_#{count}"]) if params.has_key?("new_time_entry_#{issue_id}_#{count}")
-          next if tm_vals["hours"].blank? && vals["remaining_hours"].blank? && vals["status_id"].blank?
+          next if tm_vals["hours"].blank? && vals["remaining_hours"].blank? && vals["status_id"].blank? && vals["done_ratio"].blank?
           if tm_vals["hours"].present? then
             if !tm_vals[:activity_id] then
               append_error_message_html(@message, 'Error: Issue'+issue_id+': No Activities!')
@@ -782,7 +782,7 @@ private
             new_entry.save
             append_error_message_html(@message, hour_update_check_error(new_entry, issue_id))
           end
-          if vals["remaining_hours"].present? || vals["status_id"].present? then
+          if vals["remaining_hours"].present? || vals["status_id"].present? || vals["done_ratio"].present? then
             append_error_message_html(@message, issue_update_to_remain_and_more(issue_id, vals))
           end
         end
@@ -794,7 +794,7 @@ private
       params["time_entry"].each do |id, vals|
         tm = TimeEntry.find_by_id(id)
         issue_id = tm.issue.id
-        tm_vals = vals.slice! "remaining_hours", "status_id"
+        tm_vals = vals.slice! "remaining_hours", "status_id", "done_ratio"
         tm_vals.merge!(params["time_entry_"+id.to_s]) if params.has_key?("time_entry_"+id.to_s)
         if tm_vals["hours"].blank? then
           # 工数指定が空文字の場合は工数項目を削除
@@ -814,7 +814,7 @@ private
           tm.save
           append_error_message_html(@message, hour_update_check_error(tm, issue_id))
         end
-        if vals["remaining_hours"].present? || vals["status_id"].present? then
+        if vals["remaining_hours"].present? || vals["status_id"].present? || vals["done_ratio"].present? then
           append_error_message_html(@message, issue_update_to_remain_and_more(issue_id, vals))
         end
       end
@@ -824,7 +824,7 @@ private
   def issue_update_to_remain_and_more(issue_id, vals)
     issue = Issue.find_by_id(issue_id)
     return 'Error: Issue'+issue_id+': Private!' if issue.nil? || !issue.visible?
-    return if vals["remaining_hours"].blank? && vals["status_id"].blank?
+    return if vals["remaining_hours"].blank? && vals["status_id"].blank? && vals["done_ratio"].blank?
     journal = issue.init_journal(User.current)
     # update "0.0" is changed
     vals["remaining_hours"] = 0 if vals["remaining_hours"] == "0.0"
