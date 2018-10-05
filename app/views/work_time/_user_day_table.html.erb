@@ -7,7 +7,9 @@
     <% end %>
     <td><%=l(:field_activity)%></td>
     <td><%=l(:field_status)%></td>
-    <td><%=l(:field_done_ratio)%></td>
+    <%if Setting.plugin_redmine_work_time['done_ratio_as_column'] %>
+      <td><%=l(:field_done_ratio)%></td>
+    <%end%>
     <td><%=l(:field_comments)%></td>
     <% @custom_fields.each do |cf| %>
        <td><%= cf.name %></td>
@@ -86,9 +88,26 @@ prj_pack[:odr_issues].each do |issue_pack|
                 {:controller=>"issues", :action=>"show", :id=>issue_id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
     <%= print_issue_cost(issue) %>
-    &#61;
-    <%= print_issue_cost_rate(issue) %>
-    &#37;
+    <%if Setting.plugin_redmine_work_time['done_ratio_as_column'] %>
+        &#61;
+        <%= print_issue_cost_rate(issue) %>
+        &#37;
+    <%else%>
+        <%if User.current.allowed_to?(:edit_issues, issue.project)%>
+            <a name="<%='done_ratio'+issue.id.to_s%>"
+               class="wt_done_ratio"
+               data-issue="<%= issue_id %>"
+               href="#"
+               onclick="input_done_ratio(
+                       '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
+                       <%=issue_id%>);
+                       return false;">
+              [<%=issue.done_ratio%>&#37;]
+            </a>
+        <%else%>
+            [<%=issue.done_ratio%>&#37;]
+        <%end%>
+    <%end%>
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
     <a style="position:absolute;bottom:1px;right:10px;"
@@ -133,17 +152,18 @@ prj_pack[:odr_issues].each do |issue_pack|
                      :required => true %>
     <% end %>
   </td>
-  <td>
-    <%if User.current.allowed_to?(:edit_issues, issue.project) %>
-        <%= issue.done_ratio %>
-        &#37;
+  <%if Setting.plugin_redmine_work_time['done_ratio_as_column'] %>
+    <td>
+      <%if User.current.allowed_to?(:edit_issues, issue.project) %>
+        <%=issue.done_ratio%>&#37;
         &rarr;
         <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][done_ratio]", issue.done_ratio, :size=>4) %>
         &#37;
-    <%else%>
+      <%else%>
         <%=issue.done_ratio%>&#37;
-    <%end%>
-  </td>
+      <%end%>
+    </td>
+  <%end%>
   <td>
     <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][comments]", "", :size=>80)%>
   </td>
@@ -179,9 +199,26 @@ prj_pack[:odr_issues].each do |issue_pack|
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
 
     <%= print_issue_cost(issue) %>
-    &#61;
-    <%= print_issue_cost_rate(issue) %>
-    &#37;
+    <%if Setting.plugin_redmine_work_time['done_ratio_as_column'] %>
+        &#61;
+        <%= print_issue_cost_rate(issue) %>
+        &#37;
+    <%else%>
+        <%if User.current.allowed_to?(:edit_issues, issue.project)%>
+            <a name="<%='done_ratio'+issue_id.to_s%>"
+               class="wt_done_ratio"
+               data-issue="<%= issue_id %>"
+               href="#"
+               onclick="input_done_ratio(
+                       '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
+                       <%=issue_id%>);
+                       return false;">
+              [<%=issue.done_ratio%>&#37;]
+            </a>
+        <%else%>
+            [<%=issue.done_ratio%>&#37;]
+        <%end%>
+    <%end%>
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
 
@@ -228,17 +265,18 @@ prj_pack[:odr_issues].each do |issue_pack|
                      :required => true %>
     <% end %>
   </td>
-  <td>
-    <%if User.current.allowed_to?(:edit_issues, issue.project) %>
-        <%= issue.done_ratio %>
-        &#37;
+  <%if User.current.allowed_to?(:edit_issues, issue.project) %>
+    <td>
+      <%if User.current.allowed_to?(:edit_issues, issue.project) %>
+        <%=issue.done_ratio%>&#37;
         &rarr;
         <%= text_field_tag("time_entry["+hour_id.to_s+"][done_ratio]", issue.done_ratio, :size=>4) %>
         &#37;
-    <%else%>
+      <%else%>
         <%=issue.done_ratio%>&#37;
-    <%end%>
-  </td>
+      <%end%>
+    </td>
+  <%end%>
   <td>
     <%= text_field_tag("time_entry["+hour_id.to_s+"][comments]", hour.comments, :size=>80)%>
   </td>

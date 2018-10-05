@@ -35,7 +35,7 @@ Redmine::Plugin.register :redmine_work_time do
     {:controller => 'work_time', :action => 'show'}, :caption => :work_time,
     :after => :gantt
 
-  settings :default => {'account_start_days' => {}, 'show_account_menu' => 'true'},
+  settings :default => {'account_start_days' => {}, 'show_account_menu' => 'true', 'done_ratio_as_column' => 'false'},
            :partial => 'settings/work_time_settings'
 
   Rails.configuration.to_prepare do
